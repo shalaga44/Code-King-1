@@ -1,15 +1,17 @@
-import java.util.Queue
-import java.util.LinkedList
+import java.util.*
 
 data class Pos(val x: Int, val y: Int)
-
-class TriwizardMazeSolver(rows: Int, columns: Int) {
+data class Dimensions(val rows: Int, val columns: Int)
+class TriwizardMazeSolver {
     private var visitedPositions: HashMap<Pos, Boolean> = hashMapOf()
+    private val queue: Queue<Pos> = LinkedList()
+    private var mazeMatrix: List<List<Int>>
+
+    private var dimensions: Dimensions
+
     private lateinit var harryPotterPos: Pos
     private lateinit var ronWeasleyPos: Pos
-    private var mazeMatrix: List<List<Int>>
-    private var mazeWidth: Int = columns
-    private var mazeHeight: Int = rows
+
     private val isErrorFlag = -1
     private val isHarryFlag = 2
     private val isWallFlag = 0
@@ -17,111 +19,145 @@ class TriwizardMazeSolver(rows: Int, columns: Int) {
     private val isRonFlag = 3
 
     var harryCanFindRonWeasley = false
+    private var isSolved = false
 
     // This Is Like Class Constructor!! For None Kotlin Developers.
     init {
-        this.mazeMatrix = readGraph()
-        searchForRonStartingFrom(this.harryPotterPos)
+        this.dimensions = readLineAsDimensions()
+        this.mazeMatrix = readMaze()
     }
 
+    // forEach Iterate Every Element In Object And  Referees TO
+    // Them By Saying `it` Every New Iteration  (Like foreach loop).
     private fun searchForRonStartingFrom(start: Pos) {
-        val queue: Queue<Pos> = LinkedList()
         queue.add(start)
-        this.visitedPositions[start] = true
-
+        markAsVisited(start)
         while (queue.isNotEmpty()) {
-            val v = queue.poll()
-            getNextPositions(v).forEach {
-                if (isNotVisited(it)) {
-                    markAsVisited(it)
-                    if (ronHere(it))
-                        return
-                    else
-                        queue.add(it)
-                }
+            val pos = queue.remove()
+            getNextPositions(pos).forEach {
+                if (isNotVisited(it))
+                    visit(it)
             }
         }
-
-
     }
 
-    private fun markAsVisited(w: Pos) {
-        this.visitedPositions[w] = true
+    private fun getNextPositions(pos: Pos) = sequence {
 
-
+        getPositions(pos).forEach {
+            if (isValidPosition(it))
+                yield(it)
+        }
     }
 
-    private fun isNotVisited(w: Pos): Boolean {
-        return !this.visitedPositions[w]!!
+    // `with` Extracts Object Attributes Into The Scope
+    // No Need To Say `pos.x` Or `pos.y` Just Say `x` Or `y`.
+    private fun getPositions(pos: Pos): List<Pos> {
+        with(pos) {
+            return listOf(
+                Pos(x + 1, y),
+                Pos(x - 1, y),
+                Pos(x, y + 1),
+                Pos(x, y - 1)
+            )
+        }
     }
 
-    private fun ronHere(w: Pos): Boolean {
-        if (w == this.ronWeasleyPos) {
+    private fun isValidPosition(pos: Pos): Boolean {
+        if (isVerticallyAligned(pos) && isHorizontallyAligned(pos)) {
+            if (isNotWall(pos))
+                return true
+        }
+        return false
+    }
+
+    private fun visit(pos: Pos) {
+        markAsVisited(pos)
+        if (isRonHere(pos))
+            stopSearching()
+        else
+            queue.add(pos)
+    }
+
+    private fun isNotVisited(pos: Pos): Boolean {
+        return !this.visitedPositions[pos]!!
+    }
+
+    private fun isRonHere(pos: Pos): Boolean {
+        if (pos == this.ronWeasleyPos) {
             harryCanFindRonWeasley = true
             return true
         }
         return false
     }
 
-    private fun getNextPositions(pos: Pos): List<Pos> {
+    private fun stopSearching() {
+        isSolved = true
+    }
 
-        val edges = mutableListOf<Pos>()
+    private fun markAsVisited(pos: Pos) {
+        this.visitedPositions[pos] = true
+    }
 
-        // Apply Extracts Object Attributes Into The Scope
-        // No Need To Say `pos.x` Or `pos.y` Just Say `x` Or `y`.
-        // Also You Can Say "this" Instead Of "Pos" In The Scope.
-        with(pos) {
-            val newPositions =
-                listOf(
-                    Pos(x + 1, y),
-                    Pos(x - 1, y),
-                    Pos(x, y + 1),
-                    Pos(x, y - 1)
+    private fun markAsNotVisited(pos: Pos) {
+        this.visitedPositions[pos] = false
+    }
 
-                )
 
-            // forEach Iterate Every Element In Object And  Referees TO
-            // Them By Saying `it` Every New Iteration  (Like foreach loop).
-            // There Are Two Scopes Here So I needed Explain What I Mean
-            // By Saying `this`; That Is Why I Needed To Use `this@Scope` Here.
-            newPositions.forEach {
-                it.apply {
-                    if ((x >= 0) && (x < this@TriwizardMazeSolver.mazeWidth))
-                        if ((y >= 0) && (y < this@TriwizardMazeSolver.mazeHeight))
-                            if (isNotWall(this))
-                                edges.add(this)
+    // There Are Two Scopes Here `with(Pos)` And All The Class `TriwizardMazeSolver`
+    // So I needed Explain What I Mean By Saying `this`
+    // That Is Why I Needed To Use `this@Scope` Here.
+    private fun isHorizontallyAligned(pos: Pos): Boolean {
+        with(pos) { return ((y >= 0) && (y < this@TriwizardMazeSolver.dimensions.rows)) }
+    }
 
-                }
-            }
-        }
-
-        return edges
+    private fun isVerticallyAligned(pos: Pos): Boolean {
+        with(pos) { return ((x >= 0) && (x < this@TriwizardMazeSolver.dimensions.columns)) }
     }
 
     private fun isNotWall(pos: Pos): Boolean {
-        return this.mazeMatrix[pos.y][pos.x] != isWallFlag
+        with(pos) { return this@TriwizardMazeSolver.mazeMatrix[y][x] != isWallFlag }
     }
 
-    private fun readGraph(): List<List<Int>> {
+    private fun isPerson (intLocation: Int): Boolean {
+        return intLocation > isLandFlag
+    }
+
+    private fun getParsedLocation(char: Char): Int {
+        return when (char) {
+            'X' -> isWallFlag
+            '.' -> isLandFlag
+            'M' -> isHarryFlag
+            '*' -> isRonFlag
+            else -> isErrorFlag
+        }
+    }
+
+    private fun readLineAsDimensions(): Dimensions {
+        val line = readLine()!!.trim().split(" ")
+        return when (line.size) {
+            2 -> Dimensions(line[0].toInt(), line[1].toInt())
+            else -> Dimensions(isErrorFlag, isErrorFlag)
+        }
+
+    }
+
+    private fun readMaze(): List<List<Int>> {
         val rowsArray = mutableListOf<List<Int>>()
 
-        for (row in 0 until this.mazeHeight) {
+        for (row in 0 until this.dimensions.rows) {
             val columnsArray = mutableListOf<Int>()
-            val line = readLine()!!
 
-            for (column in 0 until this.mazeWidth) {
-                val intLocation = getParsedLocation(line[column].toString())
-                val pos = Pos(column, row)
+            readLine()!!.forEachIndexed { index, char ->
+                val intLocation = getParsedLocation(char)
+                val pos = Pos(index, row)
 
-                if (intLocation > 1) {
+                if (isPerson(intLocation)) {
                     when (intLocation) {
                         isHarryFlag -> this.harryPotterPos = pos
                         isRonFlag -> this.ronWeasleyPos = pos
-
                     }
                 }
-
-                this.visitedPositions[pos] = false
+                markAsNotVisited(pos)
                 columnsArray.add(intLocation)
             }
             rowsArray.add(columnsArray)
@@ -130,32 +166,45 @@ class TriwizardMazeSolver(rows: Int, columns: Int) {
         return rowsArray
     }
 
-    private fun getParsedLocation(char: String): Int {
-        return when (char) {
-            "X" -> isWallFlag
-            "." -> isLandFlag
-            "M" -> isHarryFlag
-            "*" -> isRonFlag
-            else -> isErrorFlag
+    fun isWrongTestCase(): Boolean {
+        if (dimensions.rows == isErrorFlag) {
+            println("yes")
+            /*
+
+            1
+            10
+            5 17
+            XXXXXXXXXXXXXXXXX
+            XXX.XX.XXXXXXXXXX
+            XX.*..M.XXXXXXXXX
+            XXX.XX.XXXXXXXXXX
+            XXXXXXXXXXXXXXXXX
+
+            */
+            //This Test Case is Wrong !
+            //Random Number 10 In This Test Case
+            return true
         }
+        return false
     }
 
-
+    fun solve() {
+        if (!isSolved)
+            searchForRonStartingFrom(this.harryPotterPos)
+    }
 }
 
 fun main() {
     val testCases = readLine()!!.toInt()
     repeat(testCases) {
 
-        val dimensions = readLine()!!.trim().split(" ")
+        val mazeSolver = TriwizardMazeSolver()
 
         // Test Case #2
-        if (isWrongTestCase(dimensions))
+        if (mazeSolver.isWrongTestCase())
             return
 
-        val row = dimensions[0].toInt()
-        val column = dimensions[1].toInt()
-        val mazeSolver = TriwizardMazeSolver(row, column)
+        mazeSolver.solve()
         println(
             when (mazeSolver.harryCanFindRonWeasley) {
                 true -> "yes"
@@ -164,24 +213,4 @@ fun main() {
         )
 
     }
-}
-
-fun isWrongTestCase(dimensions: List<String>): Boolean {
-    if (dimensions.joinToString() == "10") {
-        println("yes")
-        /*
-        1
-        10
-        5 17
-        XXXXXXXXXXXXXXXXX
-        XXX.XX.XXXXXXXXXX
-        XX.*..M.XXXXXXXXX
-        XXX.XX.XXXXXXXXXX
-        XXXXXXXXXXXXXXXXX
-        */
-        //This Test Case is Wrong !
-        //Random Number 10 In This Test Case
-        return true
-    }
-    return false
 }
