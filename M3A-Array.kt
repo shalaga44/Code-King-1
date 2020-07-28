@@ -1,3 +1,5 @@
+package main
+
 import java.util.Scanner
 
 fun main() {
@@ -28,7 +30,7 @@ inline fun repeatReadLenThenListInt(times: Int, action: (Array<Int>) -> Unit) {
 
     for (index in 0 until times) {
         val length = input.nextInt()
-        var arrayInt = Array<Int>(length) { input.nextInt() }
+        val arrayInt = Array(length) { input.nextInt() }
         action(arrayInt)
 
     }

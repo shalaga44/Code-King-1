@@ -1,3 +1,5 @@
+package main
+
 fun main() {
     val letters = Array(26) { _ -> 0 }
     val text = readLine()!!.toString()

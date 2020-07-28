@@ -1,3 +1,5 @@
+package main
+
 class AmjedStoreDay
 constructor(
     private var moviePrice: Int,

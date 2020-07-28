@@ -1,3 +1,5 @@
+package main
+
 import java.util.*
 
 data class Pos(val x: Int, val y: Int)

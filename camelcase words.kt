@@ -1,9 +1,11 @@
+package main
+
 fun main() {
     val text = readLine()!!
     var totalWords = 1
 
-    for (s in text) {
-        if (!s.isLowerCase())
+    text.forEach { letter ->
+        if (letter.isUpperCase())
             totalWords++
     }
     println(totalWords)

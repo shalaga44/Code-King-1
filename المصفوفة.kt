@@ -1,3 +1,5 @@
+package main
+
 fun main() {
     val n = readLine()!!.toInt()
     var sum = 0

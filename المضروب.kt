@@ -1,3 +1,5 @@
+package main
+
 fun main() {
     repeatReadInt(readLine()!!.toInt()) {
         println(it.factorial)
@@ -7,7 +9,7 @@ fun main() {
 val Int.factorial: Int
     get() {
         var f = 1
-        for (i in 1..this) {
+        (1..this).forEach { i ->
             f *= i
         }
         return (f)

@@ -1,3 +1,5 @@
+package main
+
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -7,7 +9,7 @@ fun main() {
 }
 
 fun eval(expr: String): Int {
-    var nums = mutableListOf<Int>()
+    val nums = mutableListOf<Int>()
     var opr = ""
     for (s in expr) {
         if (s.isDigit())
@@ -34,7 +36,7 @@ fun String.runCommand(
         .redirectError(ProcessBuilder.Redirect.PIPE)
         .start().apply { waitFor(timeoutAmount, timeoutUnit) }
         .inputStream.bufferedReader().readText()
-} catch (e: java.io.IOException) {
+} catch (e: IOException) {
     e.printStackTrace()
     null
 }
